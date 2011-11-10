@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+  html { height: 100% }
+  body { height: 100%; margin: 0; padding: 0 }
+  #map_canvas { height: 100% }
+
+    html,body, div{
+        font: Helvetica, Arial, sans-serif;
+    }
+    .iwplace{
+        font-weight: bold;
+    }
+    .iwcomment{
+        font-size: smaller;
+        background-color: #eee;
+        font-style: italic;
+    }
+    .iwloc{
+        font-size: small;
+    }
+    .iwnum{
+        font-size:smaller;
+        color: #615f58;
+        border: solid black 1px;
+    }
+    .iwflickr {
+        border:  solid #b9dddc 3px;
+        padding: 2px;
+    }
+
+</style>
+<script type="text/javascript"
+    src="http://maps.googleapis.com/maps/api/js?sensor=false">
+</script>
+<script type="text/javascript" src="data.js"> </script>
+<script type="text/javascript" src="infobox.js"></script>
+<script type="text/javascript" src="flickrdata.js"></script>
+<script type="text/javascript">
+  var markers = [];
+  var map;
+  var paths = [];
+  var infow;
+  var boxText;
+  var flickrIndex = 0;
+  function initialize() {
+    var first_item = ffdata[3];
+    var latlng = new google.maps.LatLng(first_item.location.lat, first_item.location.lng);
+    var myOptions = {
+      zoom: 8,
+      center: latlng,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    map = new google.maps.Map(document.getElementById("map_canvas"),
+        myOptions);
+    create_markers();
+  }
+
+  function getFlickrPhotoHtml(stepi){
+      if (flickrIndex>=flickrPhotos.length) {return '';}
+      var fp = flickrPhotos[flickrIndex];
+      var s = '';
+      var l = '';
+      if (stepi<fp[0]){
+          return "";
+      }
+      else {
+          while (!!fp && fp[0]==stepi){
+              if (fp.length>2){
+                  l = fp[2];
+              }
+              else {
+                  s += fp[1];
+              }
+              flickrIndex += 1;
+              fp = flickrPhotos[flickrIndex];
+          }
+          if (l.length>1){
+              s = "<a style='font-size:small' href='"+l+"' target='bbphotos'>All the photos</a> <br />" + s;
+          }
+          return s;
+      }
+
+  }
+
+  function create_markers(){
+      var m,item,i, ll;
+      var linepoints = [];
+      var icon, icon_url;
+      var ind, incl, preInd=0, indOk=false;
+      var path;
+      var colors = {
+          up_line: '6bd6d3',
+          up_bubble: 'bbeceb',
+          up_bubble_flickr: 'eebce0',
+          down_line: 'eaca69',
+          down_bubble: 'f0da96',
+          up_box: 'e1f7f6',
+          down_box: 'f8efd1'
+      };
+      var way_updown = 'up';
+      var inclinations = [{incl:-45, dx:12, dy:52, w:66, h:66},
+                          {incl:-35, dx:14, dy:58, w:62, h:68},
+                          {incl:-25, dx:15, dy:56, w:56, h:69},
+                          {incl:-15, dx:16, dy:61, w:48, h:67},
+                          {incl:-5,  dx:17, dy:59, w:39, h:63},
+                          {incl:5,   dx:21, dy:59, w:39, h:63},
+                          {incl:15,  dx:31, dy:61, w:48, h:67},
+                          {incl:25,  dx:39, dy:56, w:56, h:69},
+                          {incl:35,  dx:45, dy:58, w:62, h:68},
+                          {incl:45,  dx:52, dy:52, w:66, h:66} ];
+      var flickrString;
+      
+      for(i=0;i<ffdata.length;i++){
+          item = ffdata[i];
+          ll = new google.maps.LatLng(item.location.lat, item.location.lng);
+          indOk=false;
+          while(!indOk){
+              ind = Math.floor(Math.random()* inclinations.length) ;
+              if (Math.abs(preInd-ind)>2){
+                  indOk = true;
+                  preInd = ind;
+              }
+          }
+          incl = inclinations[ind];
+
+          if (i==44) {
+              path = new google.maps.Polyline({
+                path: linepoints,
+                strokeColor: '#'+colors[way_updown+'_line'],
+                strokeOpacity: 1.0,
+                strokeWeight: 6.0
+              });
+              path.setMap(map);
+              paths.push(path);
+              way_updown='down';
+              delete linepoints;
+              linepoints = [];
+          }
+          flickrString = getFlickrPhotoHtml(i);
+          url = "https://chart.googleapis.com/chart?chst=d_map_spin&chld=0.9|"+incl.incl+"|"+colors[way_updown+'_bubble'+(!!flickrString && flickrString.length>1 ? '_flickr' : '')]+"|14|b|"+(i+1);
+          icon = new google.maps.MarkerImage(url,
+                    new google.maps.Size(incl.w,incl.h),
+                    new google.maps.Point(0,0),
+                    new google.maps.Point(incl.dx,incl.dy));
+          m = new google.maps.Marker({
+            position: ll,
+            map: map,
+            title:""+item.title,
+            clickable: true,
+            icon: icon,
+            updown: ''+way_updown
+          });
+          m.html = "<div>";
+          m.html += "<div class='iwplace'><span class='iwnum'>"+(i+1)+"</span> "+item.place+"</div>";
+          m.html += "<div class='iwloc'>"+item.location.city+", "+item.location.state+"</div>";
+          m.html += "<span class='iwcomment'> " + item.title + "</span>";
+          if (!!flickrString && flickrString.length>1)
+            m.html += "<div class='iwflickr'> " + flickrString + "</div>";
+          m.html += "</div>";
+          m.index = i;
+          google.maps.event.addListener(m, 'click', function() {
+              if (!!infow){
+                  infow.close();
+              }
+//              if(!!infoWindows[this.index]){return;}
+              var opts = {
+                  position: this.position,
+                  pixelOffset: new google.maps.Size(0,50)
+              };
+              
+              if (!infow){
+                    boxText = document.createElement("div");
+                    boxText.style.cssText = "border: 1px solid black; margin-top: 8px; background: #"+colors[this.updown+'_box']+"; padding: 5px;";
+                    boxText.innerHTML = "City Hall, Sechelt<br>British Columbia<br>Canada";
+
+                    var myOptions = {
+                         content: boxText
+                        ,disableAutoPan: false
+                        ,maxWidth: 0
+                        ,pixelOffset: new google.maps.Size(-140, 0)
+                        ,zIndex: null
+                        ,boxStyle: {
+                          background: "url('tipbox.gif') no-repeat"
+                          ,opacity: 0.8
+                          ,width: "280px"
+                         }
+                        ,closeBoxMargin: "10px 2px 2px 2px"
+                        ,closeBoxURL: "http://www.google.com/intl/en_us/mapfiles/close.gif"
+                        ,infoBoxClearance: new google.maps.Size(1, 1)
+                        ,isHidden: false
+                        ,pane: "floatPane"
+                        ,enableEventPropagation: false
+                    };
+                  infow = new InfoBox(myOptions);
+//                infow = new google.maps.InfoWindow(opts);
+                  
+              }
+              infow.setPosition(this.position);
+              boxText.innerHTML = this.html;
+              boxText.style.cssText = "border: 1px solid black; margin-top: 8px; background: #"+colors[this.updown+'_box']+"; padding: 5px;";
+//              infow.setContent(this.html );
+//              infow.index = this.index;
+              infow.open(map, this);
+//              infoWindows[this.index] = infow;
+//              google.maps.event.addListener(infow, 'closeclick', function(){
+//                  infoWindows[this.index] = null;
+//              });
+          });
+          markers.push(m);
+
+          linepoints.push(ll);
+    }
+    console.log("after loop done ");
+    console.log(linepoints);
+    path = new google.maps.Polyline({
+        path: linepoints,
+        strokeColor: '#'+colors[way_updown+'_line'],
+        strokeOpacity: 1.0,
+        strokeWeight: 6.0
+      });
+
+    path.setMap(map);
+    paths.push(path);
+  }
+
+</script>
+
+</head>
+<body onload="initialize()">
+  <div id="map_canvas" style="width:90%; height:100%"></div>
+</body>
+</html>
