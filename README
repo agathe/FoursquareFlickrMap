@@ -1,0 +1,16 @@
+ * User: agbattes
+ * Date: 11/10/11
+ * Time: 12:24 AM
+
+
+ A quick hack to create a map that displays checkins on a road trip. Most everything
+ has hard-coded parameters. 
+
+ -data.py
+    Python script to get the Foursquare checkins and put the wanted ones in a javascript file
+    It generates data.js.
+ -flickrdata.js
+    Hand made javascript file with the Flickr photos to add on the markers
+ -ffmap.html
+    HTML file displaying the map with the markers. Lots of hardcoded stuff in it too.
+ -infobox.js, tipbox.gif: External resources for the info window on the markers
