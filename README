@@ -1,10 +1,11 @@
- * User: agbattes
+ * User: Agathe Battestini
  * Date: 11/10/11
  * Time: 12:24 AM
 
 
- A quick hack to create a map that displays checkins on a road trip. Most everything
- has hard-coded parameters. 
+ A quick hack to create a map that displays the itinerary of a road trip using Foursquare checkins.
+ Info boxes on the markers on the Google Map show some of the foursquare info and flickr photos.
+ Most everything has hard-coded parameters.
 
  -data.py
     Python script to get the Foursquare checkins and put the wanted ones in a javascript file
@@ -14,3 +15,7 @@
  -ffmap.html
     HTML file displaying the map with the markers. Lots of hardcoded stuff in it too.
  -infobox.js, tipbox.gif: External resources for the info window on the markers
+
+
+
+See screenshot.png
