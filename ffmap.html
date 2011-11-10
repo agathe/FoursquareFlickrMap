@@ -46,10 +46,10 @@
   var boxText;
   var flickrIndex = 0;
   function initialize() {
-    var first_item = ffdata[3];
+    var first_item = ffdata[14];
     var latlng = new google.maps.LatLng(first_item.location.lat, first_item.location.lng);
     var myOptions = {
-      zoom: 8,
+      zoom: 6,
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
@@ -230,6 +230,6 @@
 
 </head>
 <body onload="initialize()">
-  <div id="map_canvas" style="width:90%; height:100%"></div>
+  <div id="map_canvas" style="width:100%; height:100%"></div>
 </body>
 </html>
